@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Caesar Cipher – Encrypt & Decrypt</title>
+  <style>
+    :root {
+      --bg: #0f172a; /* slate-900 */
+      --panel: #111827; /* gray-900 */
+      --muted: #94a3b8; /* slate-400 */
+      --text: #e5e7eb; /* gray-200 */
+      --accent: #f97316; /* orange-500 */
+      --accent-2: #22c55e; /* green-500 */
+      --border: #1f2937; /* gray-800 */
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: radial-gradient(1200px 600px at 10% -10%, #1f2937, var(--bg));
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial;
+      color: var(--text);
+      min-height: 100dvh; display: grid; place-items: center;
+    }
+    .app {
+      width: min(980px, 92vw);
+      background: linear-gradient(180deg, #0b1220, #0b1220) padding-box,
+                  linear-gradient(135deg, #1f2937, #111827) border-box;
+      border: 1px solid transparent; border-radius: 18px; overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0,0,0,.45);
+    }
+    header {
+      padding: 18px 22px; border-bottom: 1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    header h1 { font-size: 1.25rem; margin: 0; letter-spacing:.3px; }
+    header .tag { font-size:.85rem; color: var(--muted); }
+    main { display: grid; gap: 18px; padding: 22px; }
+    .row { display: grid; gap: 14px; grid-template-columns: 1fr; }
+    @media (min-width: 860px){ .row { grid-template-columns: 1fr 1fr; } }
+    label { font-size: .9rem; color: var(--muted); display:block; margin-bottom: 6px; }
+    textarea, input[type="number"] {
+      width: 100%;
+      background: #0b1220; color: var(--text);
+      border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 14px; font-size: 1rem; outline: none;
+    }
+    textarea { min-height: 160px; resize: vertical; }
+    .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    button {
+      border: 1px solid var(--border); background: #111827; color: var(--text);
+      padding: 10px 14px; border-radius: 12px; cursor: pointer; font-weight:600;
+      transition: transform .06s ease, background .2s ease, border-color .2s ease;
+    }
+    button:hover { transform: translateY(-1px); border-color:#2a3342; }
+    .primary { background: var(--accent); border-color: #a74d10; }
+    .success { background: var(--accent-2); border-color: #0f7a37; }
+    .ghost { background: transparent; }
+    .output { background:#0b1220; border:1px dashed #334155; border-radius:12px; padding:14px; min-height:120px; white-space:pre-wrap; }
+    .muted { color: var(--muted); }
+    footer { padding: 18px 22px; border-top: 1px solid var(--border); color: var(--muted); font-size:.9rem; display:flex; justify-content:space-between; align-items:center; }
+    a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Caesar Cipher App">
+    <header>
+      <h1>Caesar Cipher</h1>
+      <div class="tag">Encrypt & Decrypt (A–Z keeps case; non‑letters unchanged)</div>
+    </header>
+
+    <main>
+      <div class="row">
+        <section>
+          <label for="inputText">Input Text</label>
+          <textarea id="inputText" placeholder="Type or paste text here...">Hello, World!</textarea>
+        </section>
+        <section>
+          <label for="outputText">Output</label>
+          <div id="outputText" class="output muted">Encrypted / decrypted text will appear here…</div>
+        </section>
+      </div>
+
+      <div class="row" style="align-items:end">
+        <section>
+          <label for="shift">Shift</label>
+          <input id="shift" type="number" value="3" step="1" />
+        </section>
+        <section>
+          <div class="controls">
+            <button id="encryptBtn" class="primary" title="Encrypt the input with the given shift">Encrypt</button>
+            <button id="decryptBtn" class="success" title="Decrypt the input with the given shift">Decrypt</button>
+            <button id="copyBtn" class="ghost" title="Copy output to clipboard">Copy Output</button>
+            <button id="clearBtn" class="ghost" title="Clear both input and output">Clear</button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <span>Logic mirrors the classic Python version (lower/upper preserved).</span>
+      <span>Made for quick demos & practicals.</span>
+    </footer>
+  </div>
+
+  <script>
+    // --- Caesar Cipher (JS) — mirrors your Python logic ---
+    function caesarEncrypt(text, shift) {
+      const A = 'A'.charCodeAt(0), Z = 'Z'.charCodeAt(0);
+      const a = 'a'.charCodeAt(0), z = 'z'.charCodeAt(0);
+      function wrap(code, base) { return String.fromCharCode(((code - base) % 26 + 26) % 26 + base); }
+
+      let out = '';
+      for (const ch of text) {
+        const c = ch.charCodeAt(0);
+        if (c >= a && c <= z) {
+          out += wrap(c + shift, a);
+        } else if (c >= A && c <= Z) {
+          out += wrap(c + shift, A);
+        } else {
+          out += ch; // keep punctuation, spaces, digits
+        }
+      }
+      return out;
+    }
+    function caesarDecrypt(text, shift) { return caesarEncrypt(text, -shift); }
+
+    // --- DOM wiring ---
+    const $ = (id) => document.getElementById(id);
+    const input = $('inputText');
+    const output = $('outputText');
+    const shiftEl = $('shift');
+
+    function getShift() {
+      const n = parseInt(shiftEl.value, 10);
+      return Number.isFinite(n) ? n : 0;
+    }
+    function show(text) {
+      output.textContent = text || ''; 
+      output.classList.toggle('muted', !text);
+    }
+
+    $('encryptBtn').addEventListener('click', () => show(caesarEncrypt(input.value, getShift())));
+    $('decryptBtn').addEventListener('click', () => show(caesarDecrypt(input.value, getShift())));
+    $('clearBtn').addEventListener('click', () => { input.value = ''; show(''); input.focus(); });
+    $('copyBtn').addEventListener('click', async () => {
+      const text = output.textContent;
+      if (!text) return;
+      try { await navigator.clipboard.writeText(text); output.animate([{opacity:.7},{opacity:1}], {duration:300}); }
+      catch {}
+    });
+
+    // Initial demo render
+    show(caesarEncrypt(input.value, getShift()));
+  </script>
+</body>
+</html>
